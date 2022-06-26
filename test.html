@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>grid</title>
+        <script src="dist/jspsych.js"></script>
+        <script src="dist/plugin-instructions.js"></script>
+        <script src="dist/plugin-canvas-keyboard-response.js"></script>
+        <script src="dist/plugin-call-function.js"></script>
+        <script src="drawgrid.js"></script>
+        <link href="dist/jspsych.css" rel="stylesheet">
+    </head>
+    <body>
+    </body>
+    <script>
+    var jsPsych = initJsPsych();
+    var timeline = [];
+    var factors = {
+    xposition: [217.5, 242.5, 267.5, 292.5],
+    yposition: [217.5, 242.5, 267.5, 292.5],
+    }
+    var coordinates = jsPsych.randomization.factorial(factors, 1);
+    var sample = jsPsych.randomization.sampleWithoutReplacement(coordinates, 2);
+    var xself = sample[0].xposition;
+        yself = sample[0].yposition;
+        xother = sample[1].xposition;
+        yother = sample[1].yposition;
+    
+    var turntaking= 0;
+    var selfStepCount=0;
+    var otherStepCount= 0;
+    var start_time= 0;
+    var current_time=0;
+    var fruitlocationX1= -1;
+    var fruitlocationY1= -1;
+    var fruitlocationX2= -1;
+    var fruitlocationY2= -1;
+
+    var path1= [3, -1, 2, 3, -2];
+        path2= [3, 3, 1, -3, 1];
+        path3= [-4, 2, 1, 3, 1];
+        path4= [5, 1, 1, -2, 2];
+        path5= [3, 2, -2, 2, 2];
+        path6= [3, 4, -3, 2, 1];
+        path7= [2, 2,-3, 1, 5];
+        path8= [2, -4, 2, 3, 2];
+        path9= [1, 3, -4, 1, 4];
+        path10= [1, 5, -3, 3, 1];
+        path11= [4,3, -3, -2, 3];
+        path12= [3, 3,-3, 5, -1];
+        path13= [5, 1, -5, 3, 1];
+        path14= [4, 4, -2, -3, 3];
+        path15= [4, 4, -2, 1, -4];
+
+        var combination= [path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12, path13, path14, path15];
+        var pathforx = jsPsych.randomization.sampleWithReplacement(combination, 1)[0];
+        var pathfory = jsPsych.randomization.sampleWithReplacement(combination, 1)[0];  
+        var changeinx=0;
+        var changeiny=0;
+        var arrXorY= [];
+        var shuff_XorY;
+        //this would select the entire trajectory of player 2 for a round of 10 turns 
+
+    var Instructions= {
+        type: jsPsychInstructions,
+        pages:['<p>Welcome to the experiment. Click next to begin.</p>',
+        '<p>In this experiment, you are going to play a fruit foraging game. You will enter various fruit forests and the trees in different forests may have more or fewer fruits. Fruits are difficult to see from afar. They are only visible when you enter and search the location where a fruit tree is, as fruits are obscured by the tree leaves. It also takes time for fruits to grow, so there may not be any fruits the first time you encounter some fruit trees. You may discover fruits faster or slower in any block, depending on their distribution. The amount of energy you gain per fruit is the same for all fruit types. You are going to play alongside another player. Click next for more instructions.</p>',
+        '</p>There are four other players and you will be paired with either at a time. These players have previously explored the forests so they may find fruits faster than you. But they also differ in terms of how well they remember the fruit tree locations. You may be able to infer their knowledge by observing their movements. As there is more than one piece of fruit on each tree but each player can only collect one piece at a time, it may be beneficial for you to follow the other player and get the second piece of fruit after them. However, the remaining fruits will start to replenish at a constant rate once the first piece is picked from that tree, meaning that they may disappear before you get there if you are far away. Click next for more instructions.</p>',
+        '</p>In some rounds of the game (non-competitive), your only goal is to maximise the number of fruits that you forage. In competitive rounds, you need to outscore the other player for the total amount of energy gained in a particular round to be summative towards your overall total, which will be converted into bonus monetary reward. You can forage either by following the other player or by exploring the forest on your own. But remember that each player can only eat one piece of fruit at a time. This means that any player who discovers a tree will only be able to eat one piece from that tree. Click next for more instructions.</p>',
+        '</p>Each player will take turns to move around and search the forest. As you have never been to any of the forests before, your search is limited such that you can only traverse a maximum number of 5 squares in a space of 7 secs on every turn. You do not have to use up the step or time allowance and you can press button s to indicate that you have finished moving. Click next for practice trials.</p>'],
+        show_clickable_nav: true,
+        };
+    timeline.push(Instructions);
+    
+    //instructions are long, may need to incorporate some questions to check understanding before the practice block? 
+
+    var trialForPlayer1= {
+        type: jsPsychCanvasKeyboardResponse,
+        canvas_size: [510, 510],
+        stimulus: function(c) {
+            drawgrid(c, xself, yself, xother, yother,fruitlocationX1, fruitlocationY1, fruitlocationX2, fruitlocationY2);
+        },
+        response_ends_trial: true,
+        prompt: '<p>It is your turn. You can search up to 5 squares. Press button s when you are finished.</p>',
+        on_start: function(){
+            if (selfStepCount==0) {
+                start_time= jsPsych.getTotalTime();
+            }
+        },
+        on_finish: function(data) {
+            info = data.response;
+
+            if(jsPsych.pluginAPI.compareKeys(info, 'ArrowRight')){
+               if(xself<492.5){
+                xself +=25;
+                selfStepCount +=1;
+               }
+            }
+            else if (jsPsych.pluginAPI.compareKeys(info, 'ArrowLeft')){
+                if(xself>17.5){
+                xself -=25;
+                selfStepCount +=1;
+            }
+        }
+            else if (jsPsych.pluginAPI.compareKeys(info, 'ArrowUp')){
+                if(yself>17.5){
+                yself -=25;
+                selfStepCount +=1;
+            }
+        }
+            else if (jsPsych.pluginAPI.compareKeys(info, 'ArrowDown')){
+                if(yself<492.5){
+                yself +=25;
+                selfStepCount +=1;
+            }
+        }
+            else if (jsPsych.pluginAPI.compareKeys(info, 'S')) {
+                console.log("hello S")
+                selfStepCount= 999;
+            }
+        
+            }
+        }; 
+        
+    
+    var loop_trial_player1 = {
+        timeline: [trialForPlayer1],
+        loop_function: function(){
+        delta_time= jsPsych.getTotalTime() - start_time;
+            if(selfStepCount<=4 && delta_time<= 7000){
+            return true
+        } 
+            else {
+            turntaking +=1;
+            selfStepCount=0;
+            return false
+           
+        } 
+    },
+        trial_duration: 7000,
+        //how to display a time bar?
+        };
+
+
+    var setup_move_player2 = {
+        type: jsPsychCallFunction,
+        func: function(choosingPath) {
+            changeinx= pathforx[Math.floor(turntaking/2)];
+            changeiny= pathfory[Math.floor(turntaking/2)];
+
+            for (i=0; i<Math.abs(changeinx); i++) {
+                arrXorY.push('x');
+            }
+        
+            for (j=0; j<Math.abs(changeiny); j++) {
+                arrXorY.push('y')
+            }
+            shuff_XorY = jsPsych.randomization.shuffle(arrXorY);
+    },
+
+};
+
+
+    var movePlayer2= {
+        type: jsPsychCanvasKeyboardResponse,
+        canvas_size: [510, 510],
+        stimulus: function(c) {
+            drawgrid(c, xself, yself, xother, yother, fruitlocationX1, fruitlocationY1, fruitlocationX2, fruitlocationY2);
+        },
+        response_ends_trial: false,
+        trial_duration: 1500,
+        prompt: '<p>It is time for the other player to move.</p>',
+        on_start: function() {
+
+            if (shuff_XorY[otherStepCount]== 'x' && changeinx>0) {
+            xother += 25}
+            else if (shuff_XorY[otherStepCount]== 'x' && changeinx<0){
+            xother -=25
+            }
+            else if (shuff_XorY[otherStepCount]== 'y' && changeiny>0){
+            yother += 25
+            } 
+            else {
+            yother -=25
+            }
+        },
+        on_finish: function (){
+            otherStepCount +=1;
+        },
+        };
+    
+
+    var loop_move_player2 = {
+        timeline: [movePlayer2],
+        loop_function: function(){
+        if(otherStepCount < Math.abs(changeinx) + Math.abs(changeiny)){
+            return true
+        } else {
+            turntaking +=1;
+            otherStepCount =0;
+            return false 
+        }
+        },
+        };
+       
+        var loop_PlayerTurn_node = {
+        timeline: [loop_trial_player1, setup_move_player2, loop_move_player2],
+        repetitions: 5,
+            };
+        timeline.push(loop_PlayerTurn_node);
+
+        var fruitDiscoveredByOther= {
+        type: jsPsychCanvasKeyboardResponse,
+        canvas_size: [510, 510],
+        stimulus: function(c) {
+            drawgrid(c, xself, yself, xother, yother, fruitlocationX1, fruitlocationY1, fruitlocationX2, fruitlocationY2);
+        },
+        response_ends_trial: false,
+        trial_duration: 8000,
+        on_start: function() {
+          
+                fruitlocationX1= xother- 12.5;
+                fruitlocationY1= yother- 12.5;
+
+    },
+};
+timeline.push(fruitDiscoveredByOther);
+
+        var fruitDiscoveredBySelf= {
+        type: jsPsychCanvasKeyboardResponse,
+        canvas_size: [510, 510],
+        stimulus: function(c) {
+            drawgrid(c, xself, yself, xother, yother, fruitlocationX1, fruitlocationY1, fruitlocationX2, fruitlocationY2);
+        },
+        response_ends_trial: false,
+        trial_duration: 8000,
+        on_start: function() {
+            if (selfStepCount== 55){
+                fruitlocationX2= xself- 12.5;
+                fruitlocationY2= yself- 12.5;
+            }
+            else {}
+            return false
+    },
+};
+timeline.push(fruitDiscoveredBySelf);
+
+// need to do different levels of own speed, 45 or 55 steps
+// different levels of other speed, mean 26/ 34, or 28/36 
+
+    jsPsych.run(timeline);
+    
+</script>
+
+</html>
